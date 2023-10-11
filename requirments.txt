@@ -1,0 +1,7 @@
+pandas
+currency-converter
+psycopg2
+requests
+scrapy
+selenium
+django
