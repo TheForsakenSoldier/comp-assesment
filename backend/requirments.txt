@@ -1,0 +1,5 @@
+pandas
+currency-converter
+beautifulsoup4
+requests
+scrapy
