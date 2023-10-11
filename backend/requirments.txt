@@ -1,5 +1,7 @@
 pandas
 currency-converter
-beautifulsoup4
+psycopg2
 requests
 scrapy
+selenium
+django
