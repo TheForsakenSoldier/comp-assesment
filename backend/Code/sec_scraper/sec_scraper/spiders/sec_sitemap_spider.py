@@ -15,6 +15,7 @@ from scrapy.http import HtmlResponse
 import psycopg2
 from selenium import webdriver
 import xml.etree.ElementTree as ET
+from lxml import etree as et
 
 #database values
 
@@ -117,6 +118,7 @@ class SecInsiderTradesSpider(Spider):
                 form_description_link = form_description_div.find_element(By.CSS_SELECTOR, "a.document-link")
                 form_description_href = form_description_link.get_attribute("href")
                 links.append(form_description_href)
+                break
         except Exception as e:
             # Log and handle exceptions during parsing
             logging.exception("Error occurred during parsing: %s", str(e))
@@ -125,32 +127,25 @@ class SecInsiderTradesSpider(Spider):
         # Yield the extracted links
         for link in links:
             yield scrapy.Request(url=link,callback=self.parse_link)
-    
+            break
+            
     #parsing the links
-    def parse_link(self,response):
+    def parse_link(self, response):
+        
+        # getting the specific URL of the insider trade
         self.driver.get(response.url)
-    
+
+        # pulling the relevant data
+        name=self.driver.find_element(by=By.XPATH,value="/html/body/table[2]/tbody/tr[1]/td[1]/table[1]/tbody/tr/td/a").text
+        date=self.driver.find_element(by=By.XPATH,value="/html/body/table[2]/tbody/tr[2]/td/span[2]").text
+        relationship=self.driver.find_element(by=By.XPATH,value="/html/body/table[2]/tbody/tr[1]/td[3]/table/tbody/tr[3]/td/span").text
+        table_of_group_indivdual=self.driver.find_element(by=By.XPATH,value="/html/body/table[2]/tbody/tr[3]/td[2]/table/tbody")
+        
     def spider_closed(self, spider):
-        # Quit the browser when the spider is closed
+        # Quit the browser when the spider is closed and reset the driver
         if hasattr(spider, 'driver'):
             spider.driver.quit()
+            spider.driver=None
 
-class ProcessLinksSpider(Spider):
-    name = "process_links"
-    allowed_domains = ["sec.gov"]
-    start_urls = []  # Define the start_urls in the code
-    driver=None
-    def __init__(self, links=None, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.start_urls = links     #Define the start_urls
-        options=FirefoxOptions     #Define the options
-         #adding the executable path to the driver
-        driver = webdriver.Firefox(options=options) #Define the driver
-        self.driver = driver #local variable for the driver
-        
-    def parse(self, response):
-        for url in self.start_urls:
-            self.driver.get(url)
-            individual_table=self.driver.find_element(By.XPATH, '/html/body/table[2]')
-            share_type=self.driver.find_element(By.XPATH, '/html/body/table[3]' )
-            print(individual_table)
+
+    
