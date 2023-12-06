@@ -9,7 +9,7 @@ from currency_converter import CurrencyConverter
 from scrapy.utils.project import get_project_settings
 from scrapy.crawler import CrawlerProcess
 #self made spiders 
-from sec_scraper.sec_scraper.spiders.sec_sitemap_spider import SecSitemapSpider,SecInsiderTradesSpider,ProcessLinksSpider
+from sec_scraper.sec_scraper.spider_folder.spiders import SecInsiderTradesSpider
 
 
 # Add the directory containing the spider file to the system path
