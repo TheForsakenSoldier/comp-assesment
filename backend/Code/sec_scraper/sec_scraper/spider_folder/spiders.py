@@ -139,38 +139,19 @@ class SecInsiderTradesSpider(Spider):
         relationship=self.driver.find_element(by=By.XPATH,value="/html/body/table[2]/tbody/tr[1]/td[3]/table/tbody/tr[3]/td/span").text
         table_of_group_indivdual=self.driver.find_element(by=By.XPATH,value="/html/body/table[2]/tbody/tr[3]/td[2]/table/tbody")
         table_of_stocks=self.driver.find_element(by=By.XPATH,value="/html/body/table[3]/tbody").text
-        table_of_options=self.driver.find_element(by=By.XPATH,value="/html/body/table[4]/tbody").text
+        table_of_options=self.driver.find_element(by=By.XPATH,value="/html/body/table[4]/tbody")
         
         # Splitting the data into rows and creating DataFrame
         df_stocks = pd.DataFrame([row.split() for row in table_of_stocks.split("\n")], columns=["Title", "Title1", "Transaction Date", "Transaction Code", "Amount", "Type", "Price", "Total", "Disposition"])
-        pattern = re.compile(r'(\S.*?)(?=(?: \S* \$|\Z))|\$[0-9,.]+')
-        matches = pattern.findall(table_of_options)
+        
         # Merging 'Title' columns and dropping 'Title1' in one step
         df_stocks['Title'] = df_stocks['Title'] + ' ' + df_stocks["Title1"]
         df_stocks.drop('Title1', axis=1, inplace=True)
-        result = []
-        current_block = []
-        # Process the matches to create the desired array structure
-        for match in matches:
-            if match.startswith('$'):
-                # If the match starts with '$', add the current block to the result and start a new block
-                if current_block:
-                    result.append(current_block)
-                current_block = [match]
-            else:
-                # If the match doesn't start with '$', extend the current block
-                current_block.extend(match.split())
-
-        # Add the last block to the result
-        if current_block:
-            result.append(current_block)
-        print("================================================")
-        print('unfiltered table of options')
-        print(table_of_options)
-        print("================================================")
-        print('filtered :')
-        print(result)
-        print("================================================")
+        array1=[]
+        array2=[]
+        for row in table_of_options.find_elements(by=By.TAG_NAME,value="tr"):
+            for td in row.find_elements(by=By.TAG_NAME,value="td"):
+            
     def spider_closed(self, spider):
         # Quit the browser when the spider is closed and reset the driver
         if hasattr(spider, 'driver'):
