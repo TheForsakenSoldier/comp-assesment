@@ -199,9 +199,7 @@ class SecInsiderTradesSpider(Spider):
         df_options=pd.DataFrame(rows,columns=table_options_headers)
         
         
-        print('================================')  
-        print()
-        print('================================')
+        
     def spider_closed(self, spider):
         # Quit the browser when the spider is closed and reset the driver
         if hasattr(spider, 'driver'):
