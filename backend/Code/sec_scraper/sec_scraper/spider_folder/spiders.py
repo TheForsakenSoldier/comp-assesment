@@ -139,7 +139,7 @@ class SecInsiderTradesSpider(Spider):
         relationship=self.driver.find_element(by=By.XPATH,value="/html/body/table[2]/tbody/tr[1]/td[3]/table/tbody/tr[3]/td/span").text
         table_of_group_indivdual=self.driver.find_element(by=By.XPATH,value="/html/body/table[2]/tbody/tr[3]/td[2]/table/tbody")
         table_of_stocks=self.driver.find_element(by=By.XPATH,value="/html/body/table[3]/tbody").text
-        table_of_options=self.driver.find_element(by=By.XPATH,value="/html/body/table[4]/tbody")
+        table_of_options= self.driver.find_element(by=By.XPATH, value="/html/body/table[4]/tbody")
         
         # Splitting the data into rows and creating DataFrame
         df_stocks = pd.DataFrame([row.split() for row in table_of_stocks.split("\n")], columns=["Title", "Title1", "Transaction Date", "Transaction Code", "Amount", "Type", "Price", "Total", "Disposition"])
@@ -147,11 +147,61 @@ class SecInsiderTradesSpider(Spider):
         # Merging 'Title' columns and dropping 'Title1' in one step
         df_stocks['Title'] = df_stocks['Title'] + ' ' + df_stocks["Title1"]
         df_stocks.drop('Title1', axis=1, inplace=True)
-        array1=[]
-        array2=[]
-        for row in table_of_options.find_elements(by=By.TAG_NAME,value="tr"):
-            for td in row.find_elements(by=By.TAG_NAME,value="td"):
-            
+        
+        #stocks dataframe is clean now handling options
+        #creating memory calls for the handling loop
+        rows=[]
+        table_data=[]
+        add_dolar=None
+        
+        table_of_options_rows=table_of_options.find_elements(By.TAG_NAME,"tr")
+        # turning web element into 2 dimentional array for the options table
+        for tr in table_of_options_rows:
+            for td in tr.find_elements(By.TAG_NAME,"td"):
+                #adding null values to empty td's to keep the data stracture correct
+                if (td.get_attribute('innerHTML')!=''and td.get_attribute('innerHTML')!=' '):
+                    #going through spans the spans to get the relevant data and filtering 
+                    for span in td.find_elements(By.TAG_NAME,value='span'):
+                        if (span.text != '$'):
+                            if(span.get_attribute('class')=='SmallFormData' or span.get_attribute('class')=='FormData'):
+                                if add_dolar==None:
+                                    if(len(span.text) >0):
+                                      table_data.append(span.text)
+                                    else:
+                                        table_data.append("null")
+                                else:
+                                    table_data.append('$'+span.text)
+                                    add_dolar=None
+                        else:
+                            add_dolar=True
+                            
+                else:
+                    table_data.append('null')
+            rows.append(table_data)
+            table_data=[]          
+        
+        table_options_headers=[ #date format in the data bellow is (month/day/year)
+            "Title of Derivative Security",
+            "Conversion or Exercise Price of Derivative Security",
+            "Transaction Date",
+            "Deemed Execution Date, if any",
+            "Code", 
+            "V","(A)","(D)",
+            "Date Exercisable",
+            "Expiration Date",
+            "Title",
+            "Amount or Number of Shares",
+            "8. Price of Derivative Security",
+            "Number of derivative Securities Beneficially Owned Following Reported Transaction(s)",
+            "Ownership Form: Direct (D) or Indirect (I)",
+            "Nature of Indirect Beneficial Ownership"
+            ]
+        df_options=pd.DataFrame(rows,columns=table_options_headers)
+        
+        
+        print('================================')  
+        print()
+        print('================================')
     def spider_closed(self, spider):
         # Quit the browser when the spider is closed and reset the driver
         if hasattr(spider, 'driver'):
