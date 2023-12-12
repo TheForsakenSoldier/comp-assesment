@@ -13,6 +13,11 @@ from scrapy.crawler import CrawlerProcess
 from sec_scraper.sec_scraper.spider_folder.spiders import SecInsiderTradesSpider
 
 
+#exports the list of data
+def export_pandas_data(list_of_dataframes,path):
+    list_of_dataframes[0].to_json(path+"annual"+".json",orient='split',compression='infer')
+    list_of_dataframes[1].to_json(path+"quarterly"+".json",orient='split',compression='infer')
+    
 # Add the directory containing the spider file to the system path
 sys.path.append(os.path.abspath('./sec_scraper/sec_scraper/spiders'))
 
@@ -62,7 +67,9 @@ def getCikNum(ticker, update_required):
        print(f"Error: Ticker {ticker} not found.")
        return None
 
-
+# Get the data from the json file
+def get_relevant_json_data_as_pandas(ticker,path):
+    os.read(path)
 # add leading zeros to a CIK number
 def addLeadingZeros(cik):
     cik_str = str(cik)
@@ -234,7 +241,7 @@ def create_1_dataframe_quarterly(df_list, column_list):
 
 
 # This function extracts relevant data from a JSON file and returns two dataframes: one for annual data and one for quarterly data
-def get_relevant_json_data(json_data):
+def get_relevant_json_data_as_pandas(json_data):
    # Initialize an empty list to store the dataframes
    df_list = []
 
@@ -340,7 +347,7 @@ def get_Insider_Trades_Data(cik):
     process.crawl(SecInsiderTradesSpider, cik=cik)
     links = process.start(stop_after_crawl=True)
    
-
+#main function for getting the data from the ticker
 def get_Financial_Data_By_Ticker(ticker):
     #converting ticker to a cik number
     cik = getCikNum(ticker=ticker, update_required=False)
@@ -349,10 +356,8 @@ def get_Financial_Data_By_Ticker(ticker):
         #get the json file from the sec containing the data of the company
         company_facts = get_company_facts(cik=cik)
         #handle the giant json file and clean irrelevant data
-        data = get_relevant_json_data(company_facts)
-        #getting the insider data
-        company_insider_data = get_Insider_Trades_Data(cik=cik)
+        data = get_relevant_json_data_as_pandas(company_facts)
         return(data)
     
 
-print(get_Financial_Data_By_Ticker("tsla"))
+
