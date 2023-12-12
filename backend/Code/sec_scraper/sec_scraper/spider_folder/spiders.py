@@ -102,10 +102,6 @@ class SecInsiderTradesSpider(Spider):
 
     def parse(self, response):
         try:
-            # Extract table headings
-            header_element = self.driver.find_element(By.XPATH, '//*[@id="filingsTable_wrapper"]/div[3]/div[1]/div/table/thead/tr')
-            headings = [heading.text.replace("\n", " ") for heading in header_element.find_elements(By.TAG_NAME, "th")]
-
             # Extract links from the table
             table_body = self.driver.find_element(By.XPATH, '//*[@id="filingsTable"]/tbody')
             rows = table_body.find_elements(By.TAG_NAME, "tr")
@@ -116,7 +112,7 @@ class SecInsiderTradesSpider(Spider):
                 form_description_link = form_description_div.find_element(By.CSS_SELECTOR, "a.document-link")
                 form_description_href = form_description_link.get_attribute("href")
                 links.append(form_description_href)
-                break
+                
         except Exception as e:
             # Log and handle exceptions during parsing
             logging.exception("Error occurred during parsing: %s", str(e))
@@ -124,8 +120,8 @@ class SecInsiderTradesSpider(Spider):
         
         # Yield the extracted links
         for link in links:
-            yield scrapy.Request(url="https://www.sec.gov/Archives/edgar/data/1318605/000177134023000008/xslF345X05/edgardoc.xml",callback=self.parse_link)
-            break
+            yield scrapy.Request(url=link,callback=self.parse_link)
+            
             
     #parsing the links
     def parse_link(self, response):
