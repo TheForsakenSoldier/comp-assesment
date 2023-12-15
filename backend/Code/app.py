@@ -26,9 +26,9 @@ def export_pandas_data(list_of_dataframes, path):
 # Add the directory containing the spider file to the system path
 sys.path.append(os.path.abspath('./sec_scraper/sec_scraper/spiders'))
 
+
+
 # Function to convert the company ticker symbol to the CIK number
-
-
 def getCikNum(ticker, update_required):
     # Check if the ticker symbol exists in the current system
     if os.path.isfile("./tickers.xlsx") and not update_required:
@@ -77,9 +77,8 @@ def getCikNum(ticker, update_required):
         print(f"Error: Ticker {ticker} not found.")
         return 'None Existant ticker symbol'
 
+
 # Get the data from the json file
-
-
 def get_local_json_data_as_pandas(path, which_data):
     if which_data == 'q':
         quarter_df = pd.read_json(
@@ -89,9 +88,9 @@ def get_local_json_data_as_pandas(path, which_data):
         annual_df = pd.read_json(
             path_or_buf=path, orient='split', compression='infer')
         return annual_df
+
+
 # add leading zeros to a CIK number
-
-
 def addLeadingZeros(cik):
     cik_str = str(cik)
     zeros_to_add = 10 - len(cik_str)
@@ -378,12 +377,13 @@ def get_relevant_json_data_as_pandas(json_data):
 # this function calls to a spider to get the insider data from the SEC website
 
 
-def get_Insider_Trades_Data(cik):
+def get_Insider_Trades_Data(cik,ticker):
     # Create a Scrapy crawler process
     process = CrawlerProcess(get_project_settings())
     # Start the spider
-    process.crawl(SecInsiderTradesSpider, cik=cik)
-    links = process.start(stop_after_crawl=True)
+    process.crawl(SecInsiderTradesSpider, cik=cik,ticker=ticker)
+    insider_trades =process.start(stop_after_crawl=True)
+    return(insider_trades)
 
 # main function for getting the data from the ticker
 
@@ -397,6 +397,10 @@ def get_Financial_Data_By_Ticker(ticker):
         company_facts = get_company_facts(cik=cik)
         # handle the giant json file and clean irrelevant data
         data = get_relevant_json_data_as_pandas(company_facts)
-        return (data)
+        insider_data=get_Insider_Trades_Data(cik=cik,ticker=ticker)
+        
+        
+        return print(insider_data+'\n',data)
+    
     else:
         return "None Existant ticker symbol"

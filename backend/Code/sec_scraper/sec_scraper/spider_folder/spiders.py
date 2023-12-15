@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 
 import scrapy,re
 import pandas as pd
@@ -57,7 +58,8 @@ class SecInsiderTradesSpider(Spider):
     start_urls = ["http://www.sec.gov"]
     cik = None
     driver = None
-
+    json_data=pd.DataFrame(columns=["name","date","data"])
+    
     def __init__(self, cik=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.cik = cik
@@ -67,6 +69,7 @@ class SecInsiderTradesSpider(Spider):
         # options.add_argument('--headless')
         driver = webdriver.Firefox(options=options)
         self.driver = driver
+        
 
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
@@ -133,7 +136,6 @@ class SecInsiderTradesSpider(Spider):
         name=self.driver.find_element(by=By.XPATH,value="/html/body/table[2]/tbody/tr[1]/td[1]/table[1]/tbody/tr/td/a").text
         date=self.driver.find_element(by=By.XPATH,value="/html/body/table[2]/tbody/tr[2]/td/span[2]").text
         relationship=self.driver.find_element(by=By.XPATH,value="/html/body/table[2]/tbody/tr[1]/td[3]/table/tbody/tr[3]/td/span").text
-        table_of_group_indivdual=self.driver.find_element(by=By.XPATH,value="/html/body/table[2]/tbody/tr[3]/td[2]/table/tbody")
         table_of_stocks=self.driver.find_element(by=By.XPATH,value="/html/body/table[3]/tbody").text
         table_of_options= self.driver.find_element(by=By.XPATH, value="/html/body/table[4]/tbody")
         
@@ -195,12 +197,28 @@ class SecInsiderTradesSpider(Spider):
         df_options=pd.DataFrame(rows,columns=table_options_headers)
         
         
+        #adding all of the data together to a stringable data file
+        mega_json_data={
+            "name":name,
+            "date":date,
+            "data":{
+                "relationship":relationship,
+                "data_about_stocks":df_stocks.to_json(orient='records'),
+                "data_about_options":df_options.to_json(orient='records')
+            } 
+        }
+        self.json_data.loc[len(self.json_data)]=mega_json_data
+        
+        
+            
+        
         
     def spider_closed(self, spider):
         # Quit the browser when the spider is closed and reset the driver
         if hasattr(spider, 'driver'):
             spider.driver.quit()
             spider.driver=None
+        return(self.json_data)
 
 
     
