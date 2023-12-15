@@ -1,6 +1,6 @@
 # Project: TheForsakenSoldier/comp-assesment
 
-Welcome to the repository for the `comp-assesment` project! This project is a comprehensive assessment of various programming concepts and techniques. It is designed to be a friendly and informative resource for anyone interested in learning more about these topics.
+Welcome to the repository for the comp-assesment project! This project is a comprehensive assessment tool designed to provide a financial outlook over a company based on a specific ticker. It is designed to be a friendly and informative resource for anyone interested in understanding the financial health of a company.
 
 ## Project Structure
 
