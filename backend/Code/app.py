@@ -397,10 +397,10 @@ def get_Financial_Data_By_Ticker(ticker):
         company_facts = get_company_facts(cik=cik)
         # handle the giant json file and clean irrelevant data
         data = get_relevant_json_data_as_pandas(company_facts)
-        insider_data=get_Insider_Trades_Data(cik=cik,ticker=ticker)
+        #insider_data=get_Insider_Trades_Data(cik=cik,ticker=ticker)
         
         
-        return print(insider_data+'\n',data)
+        return data
     
     else:
         return "None Existant ticker symbol"
