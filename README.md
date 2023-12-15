@@ -8,7 +8,7 @@ The project is structured into two main directories:
 
 - `top_swan`: This directory should be treated as the website folder. It is a work in progress redesign or continue on your own.
 
-- `backend/Code`: This directory contains the main project that I worked on. It is designed to activate various functionalities of the website.
+- `backend/Code`: This directory contains the main project that I worked on. It is designed to 
 
 ## How to Run the Project
 
