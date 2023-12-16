@@ -7,7 +7,7 @@ import requests
 from bs4 import BeautifulSoup
 from currency_converter import CurrencyConverter
 from scrapy.crawler import CrawlerProcess
-
+import asyncio
 # spider libraries
 from scrapy.utils.project import get_project_settings
 
@@ -388,7 +388,7 @@ def get_Insider_Trades_Data(cik,ticker):
 # main function for getting the data from the ticker
 
 
-def get_Financial_Data_By_Ticker(ticker):
+async def get_Financial_Data_By_Ticker(ticker):
     # converting ticker to a cik number
     cik = getCikNum(ticker=ticker, update_required=False)
     if cik != "None Existant ticker symbol":
@@ -396,11 +396,12 @@ def get_Financial_Data_By_Ticker(ticker):
         # get the json file from the sec containing the data of the company
         company_facts = get_company_facts(cik=cik)
         # handle the giant json file and clean irrelevant data
+        loop=asyncio.get_event_loop()
         data = get_relevant_json_data_as_pandas(company_facts)
-        #insider_data=get_Insider_Trades_Data(cik=cik,ticker=ticker)
+       # insider_data=loop.run_in_executor(None,get_Insider_Trades_Data(cik=cik,ticker=ticker))
         
         
-        return data
+        return data # insider_data
     
     else:
         return "None Existant ticker symbol"

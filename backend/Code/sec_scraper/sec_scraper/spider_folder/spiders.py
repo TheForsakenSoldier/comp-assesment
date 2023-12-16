@@ -59,6 +59,9 @@ class SecInsiderTradesSpider(Spider):
     cik = None
     driver = None
     json_data=pd.DataFrame(columns=["name","date","data"])
+    custom_settings = {
+          'LOG_LEVEL': 'ERROR',
+      }
     
     def __init__(self, cik=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -115,6 +118,7 @@ class SecInsiderTradesSpider(Spider):
                 form_description_link = form_description_div.find_element(By.CSS_SELECTOR, "a.document-link")
                 form_description_href = form_description_link.get_attribute("href")
                 links.append(form_description_href)
+                break
                 
         except Exception as e:
             # Log and handle exceptions during parsing
