@@ -16,11 +16,15 @@ from sec_scraper.sec_scraper.spider_folder.spiders import SecInsiderTradesSpider
 
 
 # exports the list of data
+from pathlib import Path
+
 def export_pandas_data(list_of_dataframes, path):
-    list_of_dataframes[0].to_json(
-        path+"annual"+".json", orient='split', compression='infer')
-    list_of_dataframes[1].to_json(
-        path+"quarterly"+".json", orient='split', compression='infer')
+   path = Path(path)
+   list_of_dataframes[0].to_json(
+       path / "annual.json", orient='split', compression='infer')
+   list_of_dataframes[1].to_json(
+       path / "quarterly.json", orient='split', compression='infer')
+
 
 
 # Add the directory containing the spider file to the system path
