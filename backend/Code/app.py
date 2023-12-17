@@ -6,13 +6,8 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 from currency_converter import CurrencyConverter
-from scrapy.crawler import CrawlerProcess
 import asyncio
-# spider libraries
-from scrapy.utils.project import get_project_settings
 
-# self made spiders
-from sec_scraper.sec_scraper.spider_folder.spiders import SecInsiderTradesSpider
 
 
 # exports the list of data
@@ -27,8 +22,7 @@ def export_pandas_data(list_of_dataframes, path):
 
 
 
-# Add the directory containing the spider file to the system path
-sys.path.append(os.path.abspath('./sec_scraper/sec_scraper/spiders'))
+
 
 
 
@@ -118,8 +112,8 @@ def get_company_facts(cik):
     try:
         response = requests.get(url, headers=headers)
         response.raise_for_status()  # Raise an exception for unsuccessful requests
-        json_data = response.json()
-        return json_data
+        dict_data = response.json()
+        return pd.DataFrame.from_dict(dict_data["facts"]["us-gaap"],orient= 'index')
 
     except requests.exceptions.RequestException as e:
         print(
@@ -133,279 +127,27 @@ def get_company_facts(cik):
 # this gets the json from the SEC and summrises its debt.
 
 
-def summarize_debt_quarterly(json_list, currency_list):
-    c = CurrencyConverter()
-    summary = []
-    # Iterate over each JSON object and currency
-    for json_obj, currency in zip(json_list, currency_list):
-        # Iterate over each JSON item within the current JSON object
-        for json_item in json_obj:
-            # Get the currency debt amount
-            debt_amount = json_item['val']
-            try:
-                # Convert debt amount to USD
-                debt_usd = c.convert(debt_amount, currency, 'USD')
-            except:
-                # Handle currency conversion errors
-                print(
-                    f"Error converting {currency} to USD for debt amount: {debt_amount}")
-                continue
-
-            # Extract year and quarter information
-            year = json_item['fy']
-            quarter = json_item['fp']
-            if (quarter == 'FY'):
-                quarter = 'Q4'
-            # Create a summary dictionary for the current debt
-            debt_summary = {
-                'year': year,
-                'quarter': quarter,
-                'long_term_debt': debt_usd
-            }
-            # Append the debt summary to the list
-            summary.append(debt_summary)
-
-    return summary
-
-# This function creates a single dataframe from a list of dataframes annualy. Each dataframe in the list represents data for a company from a certain subject (like gross profit, net income, etc.)
 
 
-def create_1_dataframe_annual(df_list, column_list):
-    # Create an empty DataFrame to store the combined data
-    combined_df = pd.DataFrame(columns=column_list)
-
-    # Iterate over each dataframe in the list
-    for df in df_list:
-        # If the dataframe has a column named 'frame', drop it
-        if 'frame' in df.columns:
-            df = df.drop('frame', axis=1)
-
-        # If the dataframe has a column named 'form', filter out rows where 'form' is '10-K/A' or '10-Q'
-        if 'form' in df.columns:
-            df = df[df['form'] != '10-K/A']
-            df = df[df['form'] != '10-Q']
-            df.reset_index(drop=True, inplace=True)
-
-        # If the dataframe has a column named 'end', create new columns 'year' and 'quarter' from the 'end' column
-        if 'end' in df.columns:
-            df['year'] = pd.to_datetime(df['end']).dt.year
-            df['quarter'] = pd.to_datetime(df['end']).dt.quarter
-
-        # Try to add the relevant columns from the current dataframe to the combined dataframe
-        try:
-            if 'equity' in df.columns:
-                combined_df[['year', 'quarter', 'equity']
-                            ] = df[['year', 'quarter', 'equity']]
-            elif 'long_term_debt' in df.columns:
-                combined_df['long_term_debt'] = df['long_term_debt']
-            elif 'gross_profit' in df.columns:
-                combined_df['gross_profit'] = df['gross_profit']
-            elif 'net_income' in df.columns:
-                combined_df['net_income'] = df['net_income']
-            elif 'EPS' in df.columns:
-                combined_df['EPS'] = df['EPS']
-        except Exception as e:
-            print(f"Error occurred during join: {e}")
-
-    # If the combined dataframe is empty, return it as is
-    if combined_df.empty:
-        return combined_df
-
-    # Group the combined dataframe by 'year' and 'quarter', and sum the values in each group
-    combined_df = combined_df.groupby(
-        ['year', 'quarter'], as_index=False).sum()
-
-    # Reset the index of the combined dataframe
-    combined_df = combined_df.reset_index(drop=True)
-
-    # Return the combined dataframe
-    return combined_df
 
 
-# This function creates a single dataframe from a list of dataframes quarterly. Each dataframe in the list represents data for a company from a certain subject (like gross profit, net income, etc.)
-def create_1_dataframe_quarterly(df_list, column_list):
-    # Create an empty DataFrame to store the combined data
-    combined_df = pd.DataFrame(columns=column_list)
-
-    # Loop through each DataFrame in the list
-    for df in df_list:
-        # If 'frame' column exists in the DataFrame, drop it
-        if 'frame' in df.columns:
-            df = df.drop('frame', axis=1)
-        # If 'form' column exists in the DataFrame, filter out rows where 'form' is '10-K/A' or '10-K'
-        if 'form' in df.columns:
-            df = df[df['form'] != '10-K/A']
-            df = df[df['form'] != '10-K']
-            # Reset the index of the DataFrame
-            df.reset_index(drop=True, inplace=True)
-        # If 'end' column exists in the DataFrame, extract the year and quarter from it
-        if 'end' in df.columns:
-            df['year'] = pd.to_datetime(df['end']).dt.year
-            df['quarter'] = pd.to_datetime(df['end']).dt.quarter
-
-        # Try to add the relevant columns from the DataFrame to the combined DataFrame
-        try:
-            if 'equity' in df.columns:
-                combined_df[['year', 'quarter', 'equity']
-                            ] = df[['year', 'quarter', 'equity']]
-            elif 'long_term_debt' in df.columns:
-                combined_df['long_term_debt'] = df['long_term_debt']
-            elif 'gross_profit' in df.columns:
-                combined_df['gross_profit'] = df['gross_profit']
-            elif 'net_income' in df.columns:
-                combined_df['net_income'] = df['net_income']
-            elif 'EPS' in df.columns:
-                combined_df['EPS'] = df['EPS']
-        # If an error occurs during the join, print the error message
-        except Exception as e:
-            print(f"Error occurred during join: {e}")
-
-    # If the combined DataFrame is empty, return it
-    if combined_df.empty:
-        return combined_df
-
-    # Group the combined DataFrame by 'year' and 'quarter', and sum the values for each group
-    combined_df = combined_df.groupby(
-        ['year', 'quarter'], as_index=False).sum()
-    # Reset the index of the combined DataFrame
-    combined_df = combined_df.reset_index(drop=True)
-
-    # Return the combined DataFrame
-    return combined_df
 
 
-# This function extracts relevant data from a JSON file and returns two dataframes: one for annual data and one for quarterly data
-def get_relevant_json_data_as_pandas(json_data):
-    # Initialize an empty list to store the dataframes
-    df_list = []
-
-    # Try to extract the list of liabilities from the JSON data
-    try:
-        list_of_liabilities = json_data['facts']['us-gaap']['Liabilities']['units']['USD']
-    except KeyError:
-        list_of_liabilities = None
-
-    # Try to extract the list of net income from the JSON data
-    try:
-        list_of_net_income = json_data['facts']['us-gaap']['NetIncomeLoss']['units']['USD']
-    except KeyError:
-        try:
-            list_of_net_income = json_data['facts']['us-gaap']['ProfitLoss']['units']['USD']
-        except:
-            print("Error: Unable to find NetIncomeLoss or ProfitLoss.")
-            list_of_net_income = None
-
-    # Try to extract the list of gross profit from the JSON data
-    try:
-        list_of_gross_profit = json_data['facts']['us-gaap']['GrossProfit']['units']['USD']
-    except KeyError:
-        try:
-            list_of_gross_profit = json_data['facts']['us-gaap']['IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest']['units']['USD']
-        except KeyError:
-            print("Error: Unable to find GrossProfit or IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest.")
-            list_of_gross_profit = None
-
-    # Try to extract the list of equity from the JSON data
-    try:
-        list_of_equity = json_data['facts']['us-gaap']['StockholdersEquity']['units']['USD']
-    except KeyError:
-        list_of_equity = None
-
-    # Try to extract the list of long term debt from the JSON data
-    try:
-        list_of_long_term_debt = json_data['facts']['us-gaap']['OtherLiabilitiesNoncurrent']['units']['USD']
-    except KeyError:
-        try:
-            list_of_long_term_debt = json_data['facts']['us-gaap']['DebtAndCapitalLeaseObligations']['units']['USD']
-        except:
-            try:
-                list_of_long_term_debt = json_data['facts']['us-gaap']['DebtAndCapitalLeaseObligations']['units']['USD']
-            except KeyError:
-                try:
-                    if len(list(json_data['facts']['us-gaap']['DebtAndCapitalLeaseObligations']['units'].keys())) > 1:
-                        print("speacial case: long term debt in multiple currencies")
-                        currencies = list(
-                            json_data['facts']['us-gaap']['DebtAndCapitalLeaseObligations']['units'].keys())
-                        list_of_long_term_debt = []
-                        for currency in currencies:
-                            list_of_long_term_debt.append(
-                                json_data['facts']['us-gaap']['DebtAndCapitalLeaseObligations']['units'][currency])
-                        list_of_long_term_debt = summarize_debt_quarterly(
-                            list_of_long_term_debt, currencies)
-                except:
-                    print("cant find long term debt please contact us.")
-                    list_of_long_term_debt = None
-
-    # Try to extract the list of EPS from the JSON data
-    try:
-        list_of_eps = json_data['facts']['us-gaap']['EarningsPerShareDiluted']['units']['USD/shares']
-    except KeyError:
-        try:
-            list_of_eps = json_data['facts']['us-gaap']['EarningsPerShareBasic']['units']['USD/shares']
-        except KeyError:
-            print("Error: Unable to find EarningsPerShare.")
-            list_of_eps = None
-
-    # Convert the lists of data to dataframes
-    df_gross_profit = pd.DataFrame(list_of_gross_profit)
-    df_net_income = pd.DataFrame(list_of_net_income)
-    df_long_term_debt = pd.DataFrame(list_of_long_term_debt)
-    df_equity = pd.DataFrame(list_of_equity)
-    df_eps = pd.DataFrame(list_of_eps)
-
-    # Rename the 'val' column in each dataframe to a more descriptive name
-    df_equity.rename(columns={"val": 'equity'}, inplace=True)
-    df_long_term_debt.rename(columns={'val': "long_term_debt"}, inplace=True)
-    df_gross_profit.rename(columns={'val': 'gross_profit'}, inplace=True)
-    df_net_income.rename(columns={'val': 'net_income'}, inplace=True)
-    df_eps.rename(columns={'val': 'EPS'}, inplace=True)
-
-    # Add the dataframes to the list
-    df_list.append(df_net_income)
-    df_list.append(df_gross_profit)
-    df_list.append(df_long_term_debt)
-    df_list.append(df_equity)
-    df_list.append(df_eps)
-
-    # Define the columns that will be in the final dataframes
-    columns = ['year', 'quarter', 'net_income', 'equity',
-               'gross_profit', 'long_term_debt', 'EPS']
-
-    # Call the function to create the final dataframes
-    mega_frame_quarters = create_1_dataframe_quarterly(
-        df_list=df_list, column_list=columns)
-    mega_frame_annual = create_1_dataframe_annual(
-        df_list=df_list, column_list=columns)
-    return [mega_frame_annual, mega_frame_quarters]
-
-# this function calls to a spider to get the insider data from the SEC website
-
-
-def get_Insider_Trades_Data(cik,ticker):
-    # Create a Scrapy crawler process
-    process = CrawlerProcess(get_project_settings())
-    # Start the spider
-    process.crawl(SecInsiderTradesSpider, cik=cik,ticker=ticker)
-    insider_trades =process.start(stop_after_crawl=True)
-    return(insider_trades)
-
-# main function for getting the data from the ticker
-
-
-async def get_Financial_Data_By_Ticker(ticker):
+def get_Financial_Data_By_Ticker(ticker):
     # converting ticker to a cik number
     cik = getCikNum(ticker=ticker, update_required=False)
     if cik != "None Existant ticker symbol":
         cik = addLeadingZeros(cik=cik)
         # get the json file from the sec containing the data of the company
         company_facts = get_company_facts(cik=cik)
-        # handle the giant json file and clean irrelevant data
-        loop=asyncio.get_event_loop()
-        data = get_relevant_json_data_as_pandas(company_facts)
-       # insider_data=loop.run_in_executor(None,get_Insider_Trades_Data(cik=cik,ticker=ticker))
         
         
-        return data # insider_data
+        
+       
+        
+        
+        
     
     else:
         return "None Existant ticker symbol"
+get_Financial_Data_By_Ticker("tsla")
