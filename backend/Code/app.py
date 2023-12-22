@@ -64,29 +64,12 @@ def getCikNum(ticker, update_required):
        print(f"Error: Ticker {ticker} not found.")
        return 'None Existant ticker symbol'
 
-
-# Get the data from the json file
-def get_local_json_data_as_pandas(path, which_data):
-    if which_data == 'q':
-        quarter_df = pd.read_json(
-            path_or_buf=path, orient='split', compression='infer')
-        return quarter_df
-    elif which_data == 'a':
-        annual_df = pd.read_json(
-            path_or_buf=path, orient='split', compression='infer')
-        return annual_df
-
-
 # add leading zeros to a CIK number
 def addLeadingZeros(cik):
     cik_str = str(cik)
     zeros_to_add = 10 - len(cik_str)
     cik_with_zeros = '0' * zeros_to_add + cik_str
     return cik_with_zeros
-
-
-
-    
 
 # get the dict data for the company
 def get_company_facts(cik):
@@ -109,16 +92,29 @@ def get_company_facts(cik):
 
     return None
 
-# this gets the json from the SEC and summrises its debt.
 
+#this turns a dict into a dataframe
 def turn_into_pandas(dictionary):
-    df=pd.DataFrame.from_dict(dictionary,orient='index')
-    return df
+    for key in dictionary.keys():
+        list_of_data=dictionary[key]
+        df=pd.DataFrame(list_of_data)
+        return df
     
+#exporting the data to local filesystem
+def export_local_data(data_frame,ticker):
+    path=Path('/data/'+ ticker +'.json')
+    data_frame.to_json(path)
 
-
-
-
+#import from local filesystem
+def import_local_data(ticker):
+    path_local_file=Path("data" / ticker + '.json' )
+    if Path('/data/').exists==False:
+        
+    
+  #  if path_local_file.exists():
+        return pd.read_json(path_local_file)
+    else:
+        return "Unsuccessful import"
 
 
 def get_Financial_Data_By_Ticker(ticker):
@@ -126,11 +122,13 @@ def get_Financial_Data_By_Ticker(ticker):
     cik = getCikNum(ticker=ticker, update_required=False)
     if cik != "None Existant ticker symbol":
         cik = addLeadingZeros(cik=cik)
-        # get the json file from the sec containing the data of the company and turning it to a data frame
-       
+        # get the dictionary file from the sec containing the data of the company and turning it to a data frame
         company_facts = get_company_facts(cik=cik)
+        company_facts.rename(columns={"index":"search_val"},inplace=True)
         company_facts['units'] = company_facts['units'].apply(turn_into_pandas)
-        show(company_facts['units'])
+        
+        
+        
        
         
         
