@@ -11,7 +11,7 @@ from app import (
 async def main():
     while (True):
         ticker = input("Enter company ticker: (-1 to finish): \n")
-        if (ticker == -1 or ticker == "-1"):
+        if (ticker == str(-1)):
             break
 
         directory = Path("Data")

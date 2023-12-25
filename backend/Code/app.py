@@ -1,6 +1,5 @@
 # general imports
-# Function to convert the company ticker symbol to the CIK number
-# exports the list of data
+
 from pathlib import Path
 
 import pandas as pd
@@ -51,7 +50,7 @@ def get_cik_num(ticker, update_required):
         else:
             # If it doesn't exist, print an error message and return None
             print(f"Error: Ticker {ticker} not found.")
-            return 'None Existant ticker symbol'
+            return "None Existant ticker symbol"
     # Return the CIK number
     return cik_number_required
 
@@ -90,7 +89,7 @@ def get_company_facts(cik):
       return None
 
 
-# this turns a dict into a dataframe
+# this turns a dict into a dataframe considering the dict is structured as a list of dictionaries
 def turn_into_pandas(dictionary):
     for key in dictionary.keys():
         list_of_data = dictionary[key]
@@ -98,8 +97,6 @@ def turn_into_pandas(dictionary):
         return df
 
 # exporting the data to local filesystem
-
-
 def export_local_data(data_frame, ticker):
     path = Path('/data/' + ticker + '.json')
     data_frame.to_json(path)
@@ -131,4 +128,4 @@ def get_financial_data_by_ticker(ticker):
         return "None Existant ticker symbol"
 
 
-get_financial_data_by_ticker("asdaaaaa")
+get_financial_data_by_ticker("")
