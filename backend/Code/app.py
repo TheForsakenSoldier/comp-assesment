@@ -56,36 +56,38 @@ def get_cik_num(ticker, update_required):
     return cik_number_required
 
 # add leading zeros to a CIK number
-
-
 def add_leading_zeros(cik):
     cik_str = str(cik)
     zeros_to_add = 10 - len(cik_str)
     cik_with_zeros = '0' * zeros_to_add + cik_str
     return cik_with_zeros
 
-# get the dict data for the company
-
-
+# Define the function to get company facts
 def get_company_facts(cik):
-
-    url = f"https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json"
-    headers = {'From': 'IFlearnandwork@protonmail.com',
-               'User-Agent': "IFleanandwork@protonmail.com"}
-    try:
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()  # Raise an exception for unsuccessful requests
-        dict_data = response.json()
-        return pd.DataFrame.from_dict(dict_data["facts"]["us-gaap"], orient='index')
-
-    except requests.exceptions.RequestException as e:
-        print(
-            f"Error occurred while fetching company facts for CIK {cik}: {e}")
-
-    except ValueError as e:
-        print(f"Error occurred while parsing company facts for CIK {cik}: {e}")
-
-    return None
+  # Construct the URL for the API request
+  url = f"https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json"
+  # Define the headers for the API request
+  headers = {'From': 'IFlearnandwork@protonmail.com',
+             'User-Agent': "IFleanandwork@protonmail.com"}
+  
+  # Send the GET request to the API
+  response = requests.get(url, headers=headers)
+  # Check the status of the HTTP response
+  if response.status_code != 200:
+      # If the request was unsuccessful, print an error message and return None
+      print(f"Error occurred while fetching company facts for CIK {cik}: {response.reason}")
+      return None
+  
+  # Parse the JSON response
+  dict_data = response.json()
+  # Check if the response contains the expected data
+  if "facts" in dict_data and "us-gaap" in dict_data["facts"]:
+      # If the data is present, convert it to a DataFrame and return it
+      return pd.DataFrame.from_dict(dict_data["facts"]["us-gaap"], orient='index')
+  else:
+      # If the data is not present, print an error message and return None
+      print(f"Error occurred while parsing company facts for CIK {cik}: Unexpected response format")
+      return None
 
 
 # this turns a dict into a dataframe
@@ -129,4 +131,4 @@ def get_financial_data_by_ticker(ticker):
         return "None Existant ticker symbol"
 
 
-get_financial_data_by_ticker("tsla")
+get_financial_data_by_ticker("asdaaaaa")
