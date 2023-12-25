@@ -40,7 +40,7 @@ async def main():
                 print("--------------")
 
            
-       elif ticker is not None:
+       elif not ticker:
            # if the file dosent exist (meaning the company wasnt analysed before) add him and print it
            companies_data = await get_Financial_Data_By_Ticker(ticker=ticker)
            if (companies_data=="None Existant ticker symbol"):

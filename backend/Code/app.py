@@ -17,52 +17,46 @@ import requests
 from bs4 import BeautifulSoup
 
 def getCikNum(ticker, update_required):
-   # Check if the ticker symbol exists in the current system
-   if Path("./tickers.xlsx").exists() and not update_required:
-       # Read the Excel file containing the ticker symbols and their corresponding CIK numbers
-       cik_ticker_df = pd.read_excel("./tickers.xlsx")
-       try:
-           # Try to get the CIK number corresponding to the given ticker symbol
-           cik_number_required = cik_ticker_df["CIK"].loc[cik_ticker_df["Ticker"]
-                                                       == ticker].values
-       except IndexError:
-           # If the ticker symbol is not found, call the function again with update_required set to True
-           return getCikNum(ticker=ticker, update_required=True)
-   else:
-       # If the ticker symbol does not exist or the system does not have the tickers.xlsx file in it
-       try:
-           # Get the list of ticker symbols and their corresponding CIK numbers from the SEC website
-           ticker_to_CIK_URL = "https://www.sec.gov/include/ticker.txt"
-           headers = {'User-Agent': "IFleanandwork@protonmail.com"}
-           response = requests.get(ticker_to_CIK_URL, headers=headers)
-           soup = BeautifulSoup(response.content, "html5lib")
-           txt_dirty = soup.get_text()
-           # Clean the data
-           lines = [line.strip() for line in txt_dirty.split('\n')]
-           lines = [line.strip() for line in txt_dirty.split()]
-           ticker_cik_dict = dict(zip(lines[::2], lines[1::2]))
-           cik_ticker_df = pd.DataFrame(
-               list(ticker_cik_dict.items()), columns=["Ticker", "CIK"])
-           # Sort the data frame
-           cik_ticker_df = cik_ticker_df.sort_values("Ticker")
-           cik_ticker_df = cik_ticker_df.reset_index(drop=True)
-           # Export the data frame to an Excel file
-           cik_ticker_df.to_excel("./tickers.xlsx", index=False)
-           # Get the CIK number of the company
-           cik_number_required = cik_ticker_df["CIK"].loc[cik_ticker_df["Ticker"]
-                                                       == ticker].values
-       except requests.exceptions.RequestException:
-           # If there is an error connecting to the SEC website, print an error message and return None
-           print("Error: Unable to connect to https://www.sec.gov/include/ticker.txt.")
-           return None
-   try:
-       # Try to get the first CIK number from the list of CIK numbers
-       cik_number_required = cik_number_required[0]
-       return cik_number_required
-   except IndexError:
-       # If the ticker symbol is not found, print an error message and return None
-       print(f"Error: Ticker {ticker} not found.")
-       return 'None Existant ticker symbol'
+  # Check if the ticker symbol exists in the current system
+  if Path("./tickers.xlsx").exists() and not update_required:
+      # Read the Excel file containing the ticker symbols and their corresponding CIK numbers
+      cik_ticker_df = pd.read_excel("./tickers.xlsx")
+      # Check if the ticker symbol exists in the DataFrame
+      if ticker in cik_ticker_df["Ticker"].values:
+          # If it exists, get the corresponding CIK number
+          cik_number_required = cik_ticker_df["CIK"].loc[cik_ticker_df["Ticker"] == ticker].values[0]
+      else:
+          # If it doesn't exist, call the function again with update_required set to True
+          return getCikNum(ticker=ticker, update_required=True)
+  else:
+      # If the ticker symbol does not exist or the system does not have the tickers.xlsx file in it
+      ticker_to_CIK_URL = "https://www.sec.gov/include/ticker.txt"
+      headers = {'User-Agent': "IFleanandwork@protonmail.com"}
+      response = requests.get(ticker_to_CIK_URL, headers=headers)
+      # Check if the HTTP request was successful
+      if response.status_code != 200:
+          # If it wasn't, print an error message and return None
+          print("Error: Unable to connect to https://www.sec.gov/include/ticker.txt.")
+          return None
+      soup = BeautifulSoup(response.content, "html5lib")
+      txt_dirty = soup.get_text()
+      lines = [line.strip() for line in txt_dirty.split('\n')]
+      lines = [line.strip() for line in txt_dirty.split()]
+      ticker_cik_dict = dict(zip(lines[::2], lines[1::2]))
+      cik_ticker_df = pd.DataFrame(list(ticker_cik_dict.items()), columns=["Ticker", "CIK"])
+      cik_ticker_df = cik_ticker_df.sort_values("Ticker")
+      cik_ticker_df = cik_ticker_df.reset_index(drop=True)
+      cik_ticker_df.to_excel("./tickers.xlsx", index=False)
+      # Check if the ticker symbol exists in the DataFrame
+      if ticker in cik_ticker_df["Ticker"].values:
+          # If it exists, get the corresponding CIK number
+          cik_number_required = cik_ticker_df["CIK"].loc[cik_ticker_df["Ticker"] == ticker].values[0]
+      else:
+          # If it doesn't exist, print an error message and return None
+          print(f"Error: Ticker {ticker} not found.")
+          return 'None Existant ticker symbol'
+  # Return the CIK number
+  return cik_number_required
 
 # add leading zeros to a CIK number
 def addLeadingZeros(cik):
