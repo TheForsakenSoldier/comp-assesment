@@ -100,21 +100,30 @@ def turn_into_pandas(dictionary):
 def export_local_data(data_frame, ticker):
     path = Path('/data/' + ticker + '.json')
     data_frame.to_json(path)
+    return
 
 # import from local filesystem
-
-
 def import_local_data(ticker):
-    path_local_file = Path("data" / ticker + '.json')
-    if Path('/data/').exists == False:
+   # Construct the path to the local JSON file using the provided ticker symbol
+   path_local_file = Path("data" / ticker + '.json')
 
-        #  if path_local_file.exists():
-        return pd.read_json(path_local_file)
-    else:
-        return "Unsuccessful import"
+   # Check if the '/data/' directory exists
+   if Path('/data/').exists() == False:
+       # If the directory does not exist, create it along with any necessary parent directories
+       Path('/data/').mkdir(parents=True, exist_ok=True)
+       
+   # Check if the local JSON file exists
+   if path_local_file.exists() == True:
+       # If the file exists, read the JSON data into a pandas DataFrame and return it
+       return pd.read_json(path_local_file)
+   else:
+       # If the file does not exist, return a string indicating unsuccessful import
+       return "Unsuccessful import"
 
 
 def get_financial_data_by_ticker(ticker):
+    if (not isinstance(import_local_data(ticker),str)):
+        return import_local_data(ticker)
     # converting ticker to a cik number
     cik = get_cik_num(ticker=ticker, update_required=False)
     if cik != "None Existant ticker symbol":
@@ -123,9 +132,6 @@ def get_financial_data_by_ticker(ticker):
         company_facts = get_company_facts(cik=cik)
         company_facts.rename(columns={"index": "search_val"}, inplace=True)
         company_facts['units'] = company_facts['units'].apply(turn_into_pandas)
-
+        return company_facts
     else:
         return "None Existant ticker symbol"
-
-
-get_financial_data_by_ticker("")
