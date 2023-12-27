@@ -49,7 +49,6 @@ def get_cik_num(ticker, update_required):
                                                            == ticker].values[0]
         else:
             # If it doesn't exist, print an error message and return None
-            print(f"Error: Ticker {ticker} not found.")
             return "None Existant ticker symbol"
     # Return the CIK number
     return cik_number_required
