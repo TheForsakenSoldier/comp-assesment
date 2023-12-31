@@ -102,7 +102,7 @@ def export_local_data(data_frame, ticker):
     return
 
 # import from local filesystem
-def import_local_data(ticker):
+def import_local_data_by_ticker(ticker):
    # Construct the path to the local JSON file using the provided ticker symbol
    path_local_file = Path("data" / ticker + '.json')
 
@@ -121,8 +121,8 @@ def import_local_data(ticker):
 
 
 def get_financial_data_by_ticker(ticker):
-    if (not isinstance(import_local_data(ticker),str)):
-        return import_local_data(ticker)
+    if (not isinstance(import_local_data_by_ticker(ticker),str)):
+        return import_local_data_by_ticker(ticker)
     # converting ticker to a cik number
     cik = get_cik_num(ticker=ticker, update_required=False)
     if cik != "None Existant ticker symbol":
