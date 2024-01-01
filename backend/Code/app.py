@@ -103,21 +103,23 @@ def export_local_data(data_frame, ticker):
 
 # import from local filesystem
 def import_local_data_by_ticker(ticker):
-   # Construct the path to the local JSON file using the provided ticker symbol
-   path_local_file = Path("data" / ticker + '.json')
+  # Use the current working directory
+  data_dir = Path.cwd() / "data"
 
-   # Check if the '/data/' directory exists
-   if Path('/data/').exists() == False:
-       # If the directory does not exist, create it along with any necessary parent directories
-       Path('/data/').mkdir(parents=True, exist_ok=True)
-       
-   # Check if the local JSON file exists
-   if path_local_file.exists() == True:
-       # If the file exists, read the JSON data into a pandas DataFrame and return it
-       return pd.read_json(path_local_file)
-   else:
-       # If the file does not exist, return a string indicating unsuccessful import
-       return "Unsuccessful import"
+  # Ensure the directory exists
+  data_dir.mkdir(parents=True, exist_ok=True)
+
+  # Now you can create files within this directory
+  path_local_file = data_dir / f"{ticker}.json"
+
+  # Check if the local JSON file exists
+  if path_local_file.exists():
+      # If the file exists, read the JSON data into a pandas DataFrame and return it
+      return pd.read_json(path_local_file)
+  else:
+      # If the file does not exist, return a string indicating unsuccessful import
+      return "Unsuccessful import"
+
 
 
 def get_financial_data_by_ticker(ticker):
