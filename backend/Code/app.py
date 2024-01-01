@@ -97,7 +97,7 @@ def turn_into_pandas(dictionary):
 
 # exporting the data to local filesystem
 def export_local_data(data_frame, ticker):
-    path = Path('/data/' + ticker + '.json')
+    path = Path(f"data/{ticker}.json")
     data_frame.to_json(path)
     return
 
@@ -133,6 +133,7 @@ def get_financial_data_by_ticker(ticker):
         company_facts = get_company_facts(cik=cik)
         company_facts.rename(columns={"index": "search_val"}, inplace=True)
         company_facts['units'] = company_facts['units'].apply(turn_into_pandas)
+        export_local_data(data_frame=company_facts, ticker=ticker)
         return company_facts
     else:
-        return "None Existant ticker symbol"
+        return None

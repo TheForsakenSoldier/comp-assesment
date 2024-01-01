@@ -21,21 +21,30 @@ app.layout = html.Div([
   ])
 ])
 
-# Define a callback function that updates the header when the user clicks the Search button
 @app.callback(
- Output('post-select-company-div', 'style'),
- Input('submit-button', 'n_clicks'),
- Input('ticker-search', 'value'),
-)
-def update_hidden_div(n_clicks, ticker):
- if n_clicks is None or ticker is None:
-   raise PreventUpdate
- else :
-   df = get_financial_data_by_ticker(ticker=ticker)
-   if df is None:
-     raise PreventUpdate
+   Output('post-select-company-dropdown', 'options'),
+   Input('ticker-search', 'value'))
+def update_dropdown_options(ticker):
+   if ticker is None:
+       raise PreventUpdate
    else:
-     return {'display':'block'}
+       df = get_financial_data_by_ticker(ticker=ticker)
+       if df is None:
+           raise PreventUpdate
+       else:
+           options = df['label'].unique()
+           return options
+
+@app.callback(
+   Output('post-select-company-div', 'style'),
+   Input('submit-button', 'n_clicks'),
+   State('post-select-company-div', 'style'))
+def show_div(n_clicks, style):
+   if n_clicks is not None:
+       return {'display': 'block'}
+   else:
+       return style
+
 
 # Run the Dash application
 if __name__ == '__main__': 
