@@ -120,7 +120,8 @@ def import_local_data_by_ticker(ticker):
       # If the file does not exist, return a string indicating unsuccessful import
       return "Unsuccessful import"
 
-
+def select_df_data_by_list(dataframe,list_of_values):
+    return dataframe
 
 def get_financial_data_by_ticker(ticker):
     if (not isinstance(import_local_data_by_ticker(ticker),str)):

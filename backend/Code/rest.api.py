@@ -17,7 +17,14 @@ app.layout = html.Div([
   html.Div(id='post-select-company-div', style={'display':'none'}, children=[
     html.H1(id='post-select-company-title'),
     html.Br(),
-    dcc.Dropdown(multi=True, id='post-select-company-dropdown')
+    dcc.Dropdown(multi=True, id='post-select-company-dropdown'),
+    html.Br()
+    html.Button("Create Report", id="create-report-button", n_clicks=None)
+  ])
+  html.Div(className='main-data-div', style={'display':'none'}, children=[
+      html.H1(id='main-data-title'),
+      html.Br(),
+      dash_table.DataTable(id='main-data-table')
   ])
 ])
 
@@ -45,6 +52,15 @@ def show_div(n_clicks, style):
    else:
        return style
 
+@app.callback(
+   Output('main-data-div', 'children'),
+   Input('create-report-button', 'n_clicks'),
+   State('post-select-company-dropdown', 'dropdown_value')
+   )
+def show_table(n_clicks, style):
+   if n_clicks is not None:
+      
+   
 
 # Run the Dash application
 if __name__ == '__main__': 
