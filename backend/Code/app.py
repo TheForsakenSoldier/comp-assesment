@@ -11,9 +11,9 @@ from pandasgui import show
 
 def get_cik_num(ticker, update_required):
     # Check if the ticker symbol exists in the current system
-    if Path("./tickers.xlsx").exists() and not update_required:
+    if Path("./tickers.json").exists() and not update_required:
         # Read the Excel file containing the ticker symbols and their corresponding CIK numbers
-        cik_ticker_df = pd.read_excel("./tickers.xlsx")
+        cik_ticker_df = pd.read_json("./tickers.json")
         # Check if the ticker symbol exists in the DataFrame
         if ticker in cik_ticker_df["Ticker"].values:
             # If it exists, get the corresponding CIK number
@@ -41,7 +41,7 @@ def get_cik_num(ticker, update_required):
             list(ticker_cik_dict.items()), columns=["Ticker", "CIK"])
         cik_ticker_df = cik_ticker_df.sort_values("Ticker")
         cik_ticker_df = cik_ticker_df.reset_index(drop=True)
-        cik_ticker_df.to_excel("./tickers.xlsx", index=False)
+        cik_ticker_df.to_json("./tickers.json", index=False)
         # Check if the ticker symbol exists in the DataFrame
         if ticker in cik_ticker_df["Ticker"].values:
             # If it exists, get the corresponding CIK number
