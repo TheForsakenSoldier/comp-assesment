@@ -31,17 +31,19 @@ app.layout = html.Div([
 @app.callback(
  Output('post-select-company-dropdown', 'options'),
  Input('submit-button', 'n_clicks'),
- State('ticker-search', 'value'))
+ State('ticker-search', 'value'),prevent_initial_call=True)
 def update_dropdown_options(n_clicks, ticker): 
  if n_clicks is None or n_clicks <= 0:
-     raise PreventUpdate 
+    raise PreventUpdate 
  else:
-     df = get_financial_data_by_ticker(ticker=ticker) 
-     if df is None:
-         raise PreventUpdate 
-     else:
-         options = df['label'].unique() 
-         return options 
+    ticker=ticker.lower()
+    df = get_financial_data_by_ticker(ticker=ticker) 
+    if df is None:
+        print("No data retrieved for ticker: ", ticker)
+        raise PreventUpdate 
+    else:
+        options = df['label'].unique() 
+        return options 
 
 @app.callback(
   Output('post-select-company-div', 'style'),

@@ -79,9 +79,10 @@ def get_company_facts(cik):
   # Parse the JSON response
   dict_data = response.json()
   # Check if the response contains the expected data
-  if "facts" in dict_data and "us-gaap" in dict_data["facts"]:
+  if "facts" in dict_data:
       # If the data is present, convert it to a DataFrame and return it
-      return pd.DataFrame.from_dict(dict_data["facts"]["us-gaap"], orient='index')
+      for key in dict_data["facts"].keys():
+          yield pd.DataFrame.from_dict(dict_data["facts"][key],orient="index")
   else:
       # If the data is not present, print an error message and return None
       print(f"Error occurred while parsing company facts for CIK {cik}: Unexpected response format")
@@ -124,17 +125,18 @@ def select_df_data_by_list(dataframe,list_of_values):
     return dataframe
 
 def get_financial_data_by_ticker(ticker):
-    if (not isinstance(import_local_data_by_ticker(ticker),str)):
-        return import_local_data_by_ticker(ticker)
-    # converting ticker to a cik number
-    cik = get_cik_num(ticker=ticker, update_required=False)
-    if cik != "None Existant ticker symbol":
-        cik = add_leading_zeros(cik=cik)
-        # get the dictionary file from the sec containing the data of the company and turning it to a data frame
-        company_facts = get_company_facts(cik=cik)
-        company_facts.rename(columns={"index": "search_val"}, inplace=True)
-        company_facts['units'] = company_facts['units'].apply(turn_into_pandas)
-        export_local_data(data_frame=company_facts, ticker=ticker)
-        return company_facts
-    else:
-        return None
+   if (not isinstance(import_local_data_by_ticker(ticker),str)):
+       return import_local_data_by_ticker(ticker)
+   # converting ticker to a cik number
+   cik = get_cik_num(ticker=ticker, update_required=False)
+   if cik != "None Existant ticker symbol":
+       cik = add_leading_zeros(cik=cik)
+       # get the dictionary file from the sec containing the data of the company and turning it to a data frame
+       company_facts_gen = get_company_facts(cik=cik)
+       company_facts = pd.concat(df for df in company_facts_gen)
+       company_facts.rename(columns={"index": "search_val"}, inplace=True)
+       company_facts['units'] = company_facts['units'].apply(turn_into_pandas)
+       export_local_data(data_frame=company_facts, ticker=ticker)
+       return company_facts
+   else:
+       return None
