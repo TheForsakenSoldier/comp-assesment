@@ -5,8 +5,7 @@ from pathlib import Path
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
-from currency_converter import CurrencyConverter
-from pandasgui import show
+
 
 
 def get_cik_num(ticker, update_required):
@@ -95,12 +94,20 @@ def turn_into_pandas(dictionary):
         list_of_data = dictionary[key]
         df = pd.DataFrame(list_of_data)
         return df
-
+def insert_spaces(s):
+   result = ''
+   for i, char in enumerate(s):
+       if i != 0 and char.isupper():
+           result += ' ' + char
+       else:
+           result += char
+   return result
 # exporting the data to local filesystem
 def export_local_data(data_frame, ticker):
     path = Path(f"data/{ticker}.json")
     data_frame.to_json(path)
     return
+
 
 # import from local filesystem
 def import_local_data_by_ticker(ticker):
@@ -136,6 +143,9 @@ def get_financial_data_by_ticker(ticker):
        company_facts = pd.concat(df for df in company_facts_gen)
        company_facts.rename(columns={"index": "search_val"}, inplace=True)
        company_facts['units'] = company_facts['units'].apply(turn_into_pandas)
+       company_facts=company_facts.reset_index()
+       company_facts['index'] = company_facts['index'].map(insert_spaces)
+       company_facts.set_index('index', inplace=True)
        export_local_data(data_frame=company_facts, ticker=ticker)
        return company_facts
    else:

@@ -27,7 +27,6 @@ app.layout = html.Div([
      dash_table.DataTable(id='main-data-table') # Table for displaying the main data
  ])
 ])
-
 @app.callback(
  Output('post-select-company-dropdown', 'options'),
  Input('submit-button', 'n_clicks'),
@@ -38,23 +37,37 @@ def update_dropdown_options(n_clicks, ticker):
  else:
     ticker=ticker.lower()
     df = get_financial_data_by_ticker(ticker=ticker) 
+    dcc.Store(id="user-ticker",data=ticker)
     if df is None:
         print("No data retrieved for ticker: ", ticker)
         raise PreventUpdate 
-    else:
-        options = df['label'].unique() 
-        return options 
+    options = df.index
+    return options 
 
 @app.callback(
   Output('post-select-company-div', 'style'),
   Input('submit-button', 'n_clicks'),
   State('post-select-company-div', 'style'))
+
 def show_div(n_clicks, style): # Function to show the div containing the dropdown after the search button is clicked
   if n_clicks >0:
       return {'display': 'block'} # If the search button is clicked, display the div
   else:
       return style # Otherwise, keep the current style of the div
 
-# Run the Dash application
+@app.callback(
+  Output('main-data-table', 'data'),
+  Input('create-report-button', 'n_clicks'),
+  State('post-select-company-dropdown', 'value'),
+  State('ticker-search', 'value')
+)
+def update_table(n_clicks, selected_options,value): # Function to update the table after the create report button is clicked
+  if n_clicks is not None :
+    df=get_financial_data_by_ticker(value)
+    list_of_dataframes=df.loc[df.index.isin(selected_options)]
+    print(list_of_dataframes)
+
+
+
 if __name__ == '__main__': 
  app.run(debug=True) # Start the Dash application in debug mode
