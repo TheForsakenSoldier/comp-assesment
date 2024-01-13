@@ -4,15 +4,13 @@ Welcome to the repository for the comp-assesment project! This project is a comp
 
 ## Project Structure
 
-The project is structured into two main directories:
-
-
-
-- `backend/Code`: This directory contains the main project that I worked on. It is designed to 
+- `backend/Code/data`: Contains the data of the companies that you look for
+- `backend/Code/web`: contains the resources for the web application (so far just two images)
+- `backend/Code`: This directory contains the main project that I worked on. Two files are the main "brains" of the project, `app.py` and `rest.api.py`.
 
 ## How to Run the Project
 
-To run the project, you should navigate to the `backend/Code` directory and execute the `cmd_user_interface.py` script. This script is responsible for activating the main project and enabling all its functionalities.
+To run the project, you should navigate to the `backend/Code` directory and execute the `rest.api.py` script. This script is responsible for activating the main project and enabling all its functionalities, it will create a web app in https://127.0.0.1:8050, it dosent do much yet but soon there will be many functionalities in it.
 
 ## Contributing
 
