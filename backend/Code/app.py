@@ -1,7 +1,5 @@
 # general imports
-
 from pathlib import Path
-
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
@@ -146,6 +144,7 @@ def get_financial_data_by_ticker(ticker):
        company_facts=company_facts.reset_index()
        company_facts['index'] = company_facts['index'].map(insert_spaces)
        company_facts.set_index('index', inplace=True)
+       company_facts=company_facts.sort_index()
        export_local_data(data_frame=company_facts, ticker=ticker)
        return company_facts
    else:
