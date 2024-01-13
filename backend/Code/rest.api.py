@@ -11,63 +11,65 @@ app = Dash(__name__, title="Top Swan", assets_folder="./web/assets") # Setting u
 # Define the layout of the Dash application
 app.layout = html.Div([
  html.Div(className='pre-select-company', children=[ # Creating a div for pre-selection of company
-   dcc.Input( id="ticker-search", type="text", placeholder="Enter Company Ticker Here"), # Text input field for entering company ticker
-   html.Button("Search", id="submit-button", n_clicks=0) # Button to submit the entered ticker
+  dcc.Input( id="ticker-search", type="text", placeholder="Enter Company Ticker Here"), # Text input field for entering company ticker
+  html.Button("Search", id="submit-button", n_clicks=0) # Button to submit the entered ticker
  ]),
  html.Div(id='post-select-company-div', style={'display':'none'}, children=[ # Creating a hidden div for post-selection of company
-   html.H1(id='post-select-company-title'), # Heading for the selected company
-   html.Br(), # Line break
-   dcc.Dropdown(multi=True, id='post-select-company-dropdown'), # Dropdown menu for selecting companies
-   html.Br(), # Line break
-   html.Button("Create Report", id="create-report-button", n_clicks=None) # Button to create a report
+  html.H1(id='post-select-company-title'), # Heading for the selected company
+  html.Br(), # Line break
+  dcc.Dropdown(multi=True, id='post-select-company-dropdown'), # Dropdown menu for selecting companies
+  html.Br(), # Line break
+  html.Button("Create Report", id="create-report-button", n_clicks=None) # Button to create a report
  ]),
  html.Div(className='main-data-div', style={'display':'none'}, children=[ # Creating a hidden div for displaying main data
-     html.H1(id='main-data-title'), # Heading for the main data
-     html.Br(), # Line break
-     dash_table.DataTable(id='main-data-table') # Table for displaying the main data
+    html.H1(id='main-data-title'), # Heading for the main data
+    html.Br(), # Line break
+    dash_table.DataTable(id='main-data-table') # Table for displaying the main data
  ])
 ])
+
+# Callback function to update the dropdown options when the search button is clicked
 @app.callback(
  Output('post-select-company-dropdown', 'options'),
  Input('submit-button', 'n_clicks'),
  State('ticker-search', 'value'),prevent_initial_call=True)
 def update_dropdown_options(n_clicks, ticker): 
  if n_clicks is None or n_clicks <= 0:
-    raise PreventUpdate 
+   raise PreventUpdate 
  else:
-    ticker=ticker.lower()
-    df = get_financial_data_by_ticker(ticker=ticker) 
-    dcc.Store(id="user-ticker",data=ticker)
-    if df is None:
-        print("No data retrieved for ticker: ", ticker)
-        raise PreventUpdate 
-    options = df.index
-    return options 
+   ticker=ticker.lower()
+   df = get_financial_data_by_ticker(ticker=ticker) 
+   dcc.Store(id="user-ticker",data=ticker)
+   if df is None:
+       print("No data retrieved for ticker: ", ticker)
+       raise PreventUpdate 
+   options = df.index
+   return options 
 
+# Callback function to show the div containing the dropdown after the search button is clicked
 @app.callback(
-  Output('post-select-company-div', 'style'),
-  Input('submit-button', 'n_clicks'),
-  State('post-select-company-div', 'style'))
+ Output('post-select-company-div', 'style'),
+ Input('submit-button', 'n_clicks'),
+ State('post-select-company-div', 'style'))
+def show_div(n_clicks, style): 
+ if n_clicks >0:
+     return {'display': 'block'} # If the search button is clicked, display the div
+ else:
+     return style # Otherwise, keep the current style of the div
 
-def show_div(n_clicks, style): # Function to show the div containing the dropdown after the search button is clicked
-  if n_clicks >0:
-      return {'display': 'block'} # If the search button is clicked, display the div
-  else:
-      return style # Otherwise, keep the current style of the div
-
+# Callback function to update the table after the create report button is clicked
 @app.callback(
-  Output('main-data-table', 'data'),
-  Input('create-report-button', 'n_clicks'),
-  State('post-select-company-dropdown', 'value'),
-  State('ticker-search', 'value')
+ Output('main-data-table', 'data'),
+ Input('create-report-button', 'n_clicks'),
+ State('post-select-company-dropdown', 'value'),
+ State('ticker-search', 'value')
 )
-def update_table(n_clicks, selected_options,value): # Function to update the table after the create report button is clicked
-  if n_clicks is not None :
-    df=get_financial_data_by_ticker(value)
-    list_of_dataframes=df.loc[df.index.isin(selected_options)]
-    print(list_of_dataframes)
+def update_table(n_clicks, selected_options,value): 
+ if n_clicks is not None :
+   df=get_financial_data_by_ticker(value)
+   list_of_dataframes=df.loc[df.index.isin(selected_options)]
+   print(list_of_dataframes)
 
-
-
+# Run the Dash application in debug mode
 if __name__ == '__main__': 
- app.run(debug=True) # Start the Dash application in debug mode
+ app.run(debug=True) 
