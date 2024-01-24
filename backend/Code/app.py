@@ -1,19 +1,16 @@
 # general imports
-
 from pathlib import Path
-
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
-from currency_converter import CurrencyConverter
-from pandasgui import show
+
 
 
 def get_cik_num(ticker, update_required):
     # Check if the ticker symbol exists in the current system
-    if Path("./tickers.xlsx").exists() and not update_required:
+    if Path("./tickers.json").exists() and not update_required:
         # Read the Excel file containing the ticker symbols and their corresponding CIK numbers
-        cik_ticker_df = pd.read_excel("./tickers.xlsx")
+        cik_ticker_df = pd.read_json("./tickers.json")
         # Check if the ticker symbol exists in the DataFrame
         if ticker in cik_ticker_df["Ticker"].values:
             # If it exists, get the corresponding CIK number
@@ -41,7 +38,7 @@ def get_cik_num(ticker, update_required):
             list(ticker_cik_dict.items()), columns=["Ticker", "CIK"])
         cik_ticker_df = cik_ticker_df.sort_values("Ticker")
         cik_ticker_df = cik_ticker_df.reset_index(drop=True)
-        cik_ticker_df.to_excel("./tickers.xlsx", index=False)
+        cik_ticker_df.to_json("./tickers.json", index=False)
         # Check if the ticker symbol exists in the DataFrame
         if ticker in cik_ticker_df["Ticker"].values:
             # If it exists, get the corresponding CIK number
@@ -49,7 +46,6 @@ def get_cik_num(ticker, update_required):
                                                            == ticker].values[0]
         else:
             # If it doesn't exist, print an error message and return None
-            print(f"Error: Ticker {ticker} not found.")
             return "None Existant ticker symbol"
     # Return the CIK number
     return cik_number_required
@@ -80,9 +76,10 @@ def get_company_facts(cik):
   # Parse the JSON response
   dict_data = response.json()
   # Check if the response contains the expected data
-  if "facts" in dict_data and "us-gaap" in dict_data["facts"]:
+  if "facts" in dict_data:
       # If the data is present, convert it to a DataFrame and return it
-      return pd.DataFrame.from_dict(dict_data["facts"]["us-gaap"], orient='index')
+      for key in dict_data["facts"].keys():
+          yield pd.DataFrame.from_dict(dict_data["facts"][key],orient="index")
   else:
       # If the data is not present, print an error message and return None
       print(f"Error occurred while parsing company facts for CIK {cik}: Unexpected response format")
@@ -95,37 +92,60 @@ def turn_into_pandas(dictionary):
         list_of_data = dictionary[key]
         df = pd.DataFrame(list_of_data)
         return df
-
+def insert_spaces(s):
+   result = ''
+   for i, char in enumerate(s):
+       if i != 0 and char.isupper():
+           result += ' ' + char
+       else:
+           result += char
+   return result
 # exporting the data to local filesystem
 def export_local_data(data_frame, ticker):
-    path = Path('/data/' + ticker + '.json')
+    path = Path(f"data/{ticker}.json")
     data_frame.to_json(path)
+    return
+
 
 # import from local filesystem
+def import_local_data_by_ticker(ticker):
+  # Use the current working directory
+  data_dir = Path.cwd() / "data"
 
+  # Ensure the directory exists
+  data_dir.mkdir(parents=True, exist_ok=True)
 
-def import_local_data(ticker):
-    path_local_file = Path("data" / ticker + '.json')
-    if Path('/data/').exists == False:
+  # Now you can create files within this directory
+  path_local_file = data_dir / f"{ticker}.json"
 
-        #  if path_local_file.exists():
-        return pd.read_json(path_local_file)
-    else:
-        return "Unsuccessful import"
+  # Check if the local JSON file exists
+  if path_local_file.exists():
+      # If the file exists, read the JSON data into a pandas DataFrame and return it
+      return pd.read_json(path_local_file)
+  else:
+      # If the file does not exist, return a string indicating unsuccessful import
+      return "Unsuccessful import"
 
+def select_df_data_by_list(dataframe,list_of_values):
+    return dataframe
 
 def get_financial_data_by_ticker(ticker):
-    # converting ticker to a cik number
-    cik = get_cik_num(ticker=ticker, update_required=False)
-    if cik != "None Existant ticker symbol":
-        cik = add_leading_zeros(cik=cik)
-        # get the dictionary file from the sec containing the data of the company and turning it to a data frame
-        company_facts = get_company_facts(cik=cik)
-        company_facts.rename(columns={"index": "search_val"}, inplace=True)
-        company_facts['units'] = company_facts['units'].apply(turn_into_pandas)
-
-    else:
-        return "None Existant ticker symbol"
-
-
-get_financial_data_by_ticker("")
+   if (not isinstance(import_local_data_by_ticker(ticker),str)):
+       return import_local_data_by_ticker(ticker)
+   # converting ticker to a cik number
+   cik = get_cik_num(ticker=ticker, update_required=False)
+   if cik != "None Existant ticker symbol":
+       cik = add_leading_zeros(cik=cik)
+       # get the dictionary file from the sec containing the data of the company and turning it to a data frame
+       company_facts_gen = get_company_facts(cik=cik)
+       company_facts = pd.concat(df for df in company_facts_gen)
+       company_facts.rename(columns={"index": "search_val"}, inplace=True)
+       company_facts['units'] = company_facts['units'].apply(turn_into_pandas)
+       company_facts=company_facts.reset_index()
+       company_facts['index'] = company_facts['index'].map(insert_spaces)
+       company_facts.set_index('index', inplace=True)
+       company_facts=company_facts.sort_index()
+       export_local_data(data_frame=company_facts, ticker=ticker)
+       return company_facts
+   else:
+       return None
