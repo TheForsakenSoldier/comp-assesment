@@ -71,6 +71,7 @@ def update_table(n_clicks, selected_options, value):
    list_of_dataframes = df.loc[df.index.isin(selected_options)]
    flat_df = pd.DataFrame()
    print(pd.DataFrame.from_dict(list_of_dataframes.at[selected_options[0],"units"]))
+   print("new branch")
    return
 
 # Run the Dash application in debug mode
