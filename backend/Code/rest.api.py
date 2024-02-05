@@ -1,6 +1,7 @@
 # Import necessary libraries and functions
 from dash import Dash, html, dcc, Input, Output, State, callback, dash_table
 import pandas as pd
+import json
 from pandasgui import show
 from dash.exceptions import PreventUpdate
 import plotly.express as px
@@ -69,10 +70,11 @@ def update_table(n_clicks, selected_options, value):
  if n_clicks is not None :
    df = get_financial_data_by_ticker(value)
    list_of_dataframes = df.loc[df.index.isin(selected_options)]
-   flat_df = pd.DataFrame()
+   json_data_df_summary = {}
    for i in range(0, len(list_of_dataframes),1):
      current_df=pd.DataFrame.from_dict(list_of_dataframes.at[selected_options[i],"units"])
-   
+     current_df=current_df['fy','fp','form','val']
+     json_data_df_summary[selected_options[i]].append(current_df)
    return
 
 # Run the Dash application in debug mode
