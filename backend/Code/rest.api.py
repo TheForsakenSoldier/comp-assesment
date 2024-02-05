@@ -70,8 +70,9 @@ def update_table(n_clicks, selected_options, value):
    df = get_financial_data_by_ticker(value)
    list_of_dataframes = df.loc[df.index.isin(selected_options)]
    flat_df = pd.DataFrame()
-   print(pd.DataFrame.from_dict(list_of_dataframes.at[selected_options[0],"units"]))
-   print("new branch")
+   for i in range(0, len(list_of_dataframes),1):
+     current_df=pd.DataFrame.from_dict(list_of_dataframes.at[selected_options[i],"units"])
+   
    return
 
 # Run the Dash application in debug mode
