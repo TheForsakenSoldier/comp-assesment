@@ -69,8 +69,10 @@ def update_table(n_clicks, selected_options, value):
  if n_clicks is not None :
    df = get_financial_data_by_ticker(value)
    list_of_dataframes = df.loc[df.index.isin(selected_options)]
-   flat_df = pd.DataFrame()
-   print(pd.DataFrame.from_dict(list_of_dataframes.at[selected_options[0],"units"]))
+   big_data = pd.DataFrame()
+   for i in range(len(list_of_dataframes)):
+     list_of_dataframes[i] = list_of_dataframes[i].rename(columns={'units':selected_options[i]})
+     
    return
 
 # Run the Dash application in debug mode
