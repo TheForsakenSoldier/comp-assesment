@@ -82,6 +82,7 @@ def show_div(n_clicks, style):
     State('post-select-company-dropdown', 'value'),
     State('ticker-search', 'value')
 )
+
 def update_table(n_clicks, selected_options, value):
     if n_clicks is not None:
         df = get_financial_data_by_ticker(value)
