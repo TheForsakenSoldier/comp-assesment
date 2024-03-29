@@ -77,29 +77,31 @@ def show_div(n_clicks, style):
 
 
 @app.callback(
-    Output('main-data-table', 'data'),
+    [Output('main-data-table', 'data'),
+    Output('main-data-div', 'style')],  # Add this output to target the style of the div
     Input('create-report-button', 'n_clicks'),
     State('post-select-company-dropdown', 'value'),
     State('ticker-search', 'value')
 )
-
 def update_table(n_clicks, selected_options, value):
     if n_clicks is not None:
         df = get_financial_data_by_ticker(value)
         list_of_dataframes = df.loc[df.index.isin(selected_options)]
-        data_summary = []
-        for i in range(0, len(list_of_dataframes), 1):
+        data_summary = []  # Initialize as a list to hold the rows of the table
+        for i in range(len(list_of_dataframes)):
             current_df = pd.DataFrame.from_dict(
                 list_of_dataframes.at[selected_options[i], "units"])
             current_df = current_df[['fy', 'fp', 'form', 'val']]
-            data_summary[selected_options[i]].append(current_df.to_dict()) 
-       # data_summary = pd.DataFrame.from_dict(data_summary, orient='index')
+            # Convert the dataframe to a dictionary and append it to the list
+            data_summary.append(current_df.to_dict(orient='records')[0])
+        
+        # Store the data summary in the session state
         dcc.Store(id="selected_company_data", data=data_summary)
-        # Convert the summary dictionary to a list of dictionaries
-
-        return data_summary#.to_dict('records')
+        
+        # Set the style of the div to make it visible
+        return data_summary, {'display': 'block'}  # Return the list of dictionaries and the new style
     else:
-        PreventUpdate
+        raise PreventUpdate
 
 
 # Run the Dash application in debug mode
