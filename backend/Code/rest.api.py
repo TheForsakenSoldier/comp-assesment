@@ -1,7 +1,7 @@
 # app.py or rest.api.py (whichever you prefer as the main entry point)
+from callbacks import register_callbacks
 from dash import Dash
 from layouts import create_layout
-from callbacks import register_callbacks
 
 app = Dash(__name__, title="Top Swan", assets_folder="./web/assets")
 

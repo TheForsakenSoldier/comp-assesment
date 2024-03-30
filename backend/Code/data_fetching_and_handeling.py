@@ -1,9 +1,9 @@
 # general imports
 from pathlib import Path
+
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
-
 
 
 def get_cik_num(ticker, update_required):
@@ -51,6 +51,8 @@ def get_cik_num(ticker, update_required):
     return cik_number_required
 
 # add leading zeros to a CIK number
+
+
 def add_leading_zeros(cik):
     cik_str = str(cik)
     zeros_to_add = 10 - len(cik_str)
@@ -58,32 +60,36 @@ def add_leading_zeros(cik):
     return cik_with_zeros
 
 # Define the function to get company facts
+
+
 def get_company_facts(cik):
-  # Construct the URL for the API request
-  url = f"https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json"
-  # Define the headers for the API request
-  headers = {'From': 'IFlearnandwork@protonmail.com',
-             'User-Agent': "IFleanandwork@protonmail.com"}
-  
-  # Send the GET request to the API
-  response = requests.get(url, headers=headers)
-  # Check the status of the HTTP response
-  if response.status_code != 200:
-      # If the request was unsuccessful, print an error message and return None
-      print(f"Error occurred while fetching company facts for CIK {cik}: {response.reason}")
-      return None
-  
-  # Parse the JSON response
-  dict_data = response.json()
-  # Check if the response contains the expected data
-  if "facts" in dict_data:
-      # If the data is present, convert it to a DataFrame and return it
-      for key in dict_data["facts"].keys():
-          yield pd.DataFrame.from_dict(dict_data["facts"][key],orient="index")
-  else:
-      # If the data is not present, print an error message and return None
-      print(f"Error occurred while parsing company facts for CIK {cik}: Unexpected response format")
-      return None
+    # Construct the URL for the API request
+    url = f"https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json"
+    # Define the headers for the API request
+    headers = {'From': 'IFlearnandwork@protonmail.com',
+               'User-Agent': "IFleanandwork@protonmail.com"}
+
+    # Send the GET request to the API
+    response = requests.get(url, headers=headers)
+    # Check the status of the HTTP response
+    if response.status_code != 200:
+        # If the request was unsuccessful, print an error message and return None
+        print(
+            f"Error occurred while fetching company facts for CIK {cik}: {response.reason}")
+        return None
+
+    # Parse the JSON response
+    dict_data = response.json()
+    # Check if the response contains the expected data
+    if "facts" in dict_data:
+        # If the data is present, convert it to a DataFrame and return it
+        for key in dict_data["facts"].keys():
+            yield pd.DataFrame.from_dict(dict_data["facts"][key], orient="index")
+    else:
+        # If the data is not present, print an error message and return None
+        print(
+            f"Error occurred while parsing company facts for CIK {cik}: Unexpected response format")
+        return None
 
 
 # this turns a dict into a dataframe considering the dict is structured as a list of dictionaries
@@ -92,15 +98,19 @@ def turn_into_pandas(dictionary):
         list_of_data = dictionary[key]
         df = pd.DataFrame(list_of_data)
         return df
+
+
 def insert_spaces(s):
-   result = ''
-   for i, char in enumerate(s):
-       if i != 0 and char.isupper():
-           result += ' ' + char
-       else:
-           result += char
-   return result
+    result = ''
+    for i, char in enumerate(s):
+        if i != 0 and char.isupper():
+            result += ' ' + char
+        else:
+            result += char
+    return result
 # exporting the data to local filesystem
+
+
 def export_local_data(data_frame, ticker):
     path = Path(f"data/{ticker}.json")
     data_frame.to_json(path)
@@ -109,43 +119,45 @@ def export_local_data(data_frame, ticker):
 
 # import from local filesystem
 def import_local_data_by_ticker(ticker):
-  # Use the current working directory
-  data_dir = Path.cwd() / "data"
+    # Use the current working directory
+    data_dir = Path.cwd() / "data"
 
-  # Ensure the directory exists
-  data_dir.mkdir(parents=True, exist_ok=True)
+    # Ensure the directory exists
+    data_dir.mkdir(parents=True, exist_ok=True)
 
-  # Now you can create files within this directory
-  path_local_file = data_dir / f"{ticker}.json"
+    # Now you can create files within this directory
+    path_local_file = data_dir / f"{ticker}.json"
 
-  # Check if the local JSON file exists
-  if path_local_file.exists():
-      # If the file exists, read the JSON data into a pandas DataFrame and return it
-      return pd.read_json(path_local_file)
-  else:
-      # If the file does not exist, return a string indicating unsuccessful import
-      return "Unsuccessful import"
+    # Check if the local JSON file exists
+    if path_local_file.exists():
+        # If the file exists, read the JSON data into a pandas DataFrame and return it
+        return pd.read_json(path_local_file)
+    else:
+        # If the file does not exist, return a string indicating unsuccessful import
+        return "Unsuccessful import"
 
-def select_df_data_by_list(dataframe,list_of_values):
+
+def select_df_data_by_list(dataframe, list_of_values):
     return dataframe
 
+
 def get_financial_data_by_ticker(ticker):
-   if (not isinstance(import_local_data_by_ticker(ticker),str)):
-       return import_local_data_by_ticker(ticker)
-   # converting ticker to a cik number
-   cik = get_cik_num(ticker=ticker, update_required=False)
-   if cik != "None Existant ticker symbol":
-       cik = add_leading_zeros(cik=cik)
-       # get the dictionary file from the sec containing the data of the company and turning it to a data frame
-       company_facts_gen = get_company_facts(cik=cik)
-       company_facts = pd.concat(df for df in company_facts_gen)
-       company_facts.rename(columns={"index": "search_val"}, inplace=True)
-       company_facts['units'] = company_facts['units'].apply(turn_into_pandas)
-       company_facts=company_facts.reset_index()
-       company_facts['index'] = company_facts['index'].map(insert_spaces)
-       company_facts.set_index('index', inplace=True)
-       company_facts=company_facts.sort_index()
-       export_local_data(data_frame=company_facts, ticker=ticker)
-       return company_facts
-   else:
-       return None
+    if (not isinstance(import_local_data_by_ticker(ticker), str)):
+        return import_local_data_by_ticker(ticker)
+    # converting ticker to a cik number
+    cik = get_cik_num(ticker=ticker, update_required=False)
+    if cik != "None Existant ticker symbol":
+        cik = add_leading_zeros(cik=cik)
+        # get the dictionary file from the sec containing the data of the company and turning it to a data frame
+        company_facts_gen = get_company_facts(cik=cik)
+        company_facts = pd.concat(df for df in company_facts_gen)
+        company_facts.rename(columns={"index": "search_val"}, inplace=True)
+        company_facts['units'] = company_facts['units'].apply(turn_into_pandas)
+        company_facts = company_facts.reset_index()
+        company_facts['index'] = company_facts['index'].map(insert_spaces)
+        company_facts.set_index('index', inplace=True)
+        company_facts = company_facts.sort_index()
+        export_local_data(data_frame=company_facts, ticker=ticker)
+        return company_facts
+    else:
+        return None
