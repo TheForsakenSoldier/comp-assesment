@@ -2,7 +2,7 @@
 from dash.dependencies import Input, Output, State
 import dash
 import pandas as pd
-from app import get_financial_data_by_ticker
+from backend.Code.data_fetching_and_handeling import get_financial_data_by_ticker
 def register_callbacks(app):
     @app.callback(
         Output('post-select-company-dropdown', 'options'),
