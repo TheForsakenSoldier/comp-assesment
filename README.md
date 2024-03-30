@@ -19,7 +19,7 @@ To run the project, you should navigate to the `backend/Code` directory and exec
 This module contains functions for fetching financial data from the SEC's API, processing the data, and saving it locally. Key functions include:
 
 - `get_cik_num(ticker, update_required)`: Fetches the CIK (Central Index Key) number for a given ticker symbol.
-- `add_leading_zeros(cik)`: Adds leading zeros to a CIK number to ensure it is 10 digits long.
+- `add_leading_zeros(cik)`: Adds leading zeros to a CIK number to ensure it is 10 digits long. (for the sec website)
 - `get_company_facts(cik)`: Fetches company facts from the SEC's API using the CIK number.
 - `turn_into_pandas(dictionary)`: Converts a dictionary of lists into a pandas DataFrame.
 - `insert_spaces(s)`: Inserts spaces before uppercase characters in a string, improving readability.
@@ -30,7 +30,7 @@ This module contains functions for fetching financial data from the SEC's API, p
 
 ### Dash Application Setup
 
-The Dash application is initialized in `app.py` or `rest.api.py`, setting up the layout and registering callbacks.
+The Dash application is initialized in `rest.api.py`, setting up the layout and registering callbacks.
 
 ### Layouts
 
